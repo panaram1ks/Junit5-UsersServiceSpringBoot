@@ -4,9 +4,7 @@ import com.appsdeveloperblog.tutorials.junit.security.SecurityConstants;
 import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +27,7 @@ import java.util.List;
 //@TestPropertySource(locations = "/application-test.properties")
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UsersControllersIntegrationTest {
 
     @Value("${server.port}")
@@ -48,6 +47,7 @@ public class UsersControllersIntegrationTest {
 
     @Test
     @DisplayName("User can be created")
+    @Order(0)
     void testCreateUser_whenValidDetailsProvided_returnsUserDetails() throws JSONException {
         // Arrange
         JSONObject userDetailsRequestJson = new JSONObject();
@@ -69,7 +69,7 @@ public class UsersControllersIntegrationTest {
                 request,
                 UserRest.class
         );
-        UserRest  userRest = response.getBody();
+        UserRest userRest = response.getBody();
 
         // Assert
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
@@ -79,7 +79,7 @@ public class UsersControllersIntegrationTest {
 
     @Test
     @DisplayName("GET /users requires JWT")
-    void getUsers_whenMissingJWT_returns403(){
+    void getUsers_whenMissingJWT_returns403() {
         //Arrange
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/json");
@@ -104,6 +104,7 @@ public class UsersControllersIntegrationTest {
 
     @Test
     @DisplayName("/login works")
+    @Order(1)
     void testUserLogin_whenValidCredentialsProvided_returnsJWTinAuthorizationHeader() throws JSONException {
         //Arrange
         String loginCredentialsJson = " {\n" +
