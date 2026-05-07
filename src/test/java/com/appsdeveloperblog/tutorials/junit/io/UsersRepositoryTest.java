@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.util.List;
 import java.util.UUID;
 
 @DataJpaTest
@@ -43,7 +44,7 @@ public class UsersRepositoryTest {
     }
 
     @Test
-    void testFindByUserId_whenGivenCorrectUserId_returnUserEntity(){
+    void testFindByUserId_whenGivenCorrectUserId_returnUserEntity() {
         // Arrange
 
         // Act
@@ -52,6 +53,22 @@ public class UsersRepositoryTest {
         // Assert
         Assertions.assertNotNull(storedUser, "StoredUser should not be null");
         Assertions.assertEquals(userEntity.getUserId(), storedUser.getUserId(), "userId should be equal");
+    }
+
+    @Test
+    void testFindUsersWithEmailEndingWith_whenGivenCorrectEmail_returnUserEntity() {
+        // Arrange
+
+        // Act
+        UserEntity persisted = testEntityManager.persistAndFlush(userEntity);
+        String email = persisted.getEmail();
+        int startsIndex = email.length() / 2;
+        int endIndex = email.length();
+        String emailEnd = email.substring(startsIndex, endIndex);
+        List<UserEntity> users = usersRepository.findUsersWithEmailEndingWith(emailEnd);
+
+        // Assert
+        Assertions.assertTrue(users.size() > 0, "should be at least one user");
     }
 
 }
