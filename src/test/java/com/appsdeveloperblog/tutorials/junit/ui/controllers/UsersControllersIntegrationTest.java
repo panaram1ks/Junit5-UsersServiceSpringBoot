@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.tutorials.junit.ui.controllers;
 
+import com.appsdeveloperblog.tutorials.junit.security.SecurityConstants;
 import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -99,6 +100,35 @@ public class UsersControllersIntegrationTest {
 
         //Assert
         Assertions.assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value(), "Status code is not 403!");
+    }
+
+    @Test
+    @DisplayName("/login works")
+    void testUserLogin_whenValidCredentialsProvided_returnsJWTinAuthorizationHeader() throws JSONException {
+        //Arrange
+        String loginCredentialsJson = " {\n" +
+                "  \"email\":\"test3@test.com\",\n" +
+                "  \"password\":\"12345678\",\n" +
+                "}";
+        JSONObject loginCredentials = new JSONObject();
+        loginCredentials.put("email", "test3@test.com");
+        loginCredentials.put("password", "12345678");
+
+        HttpEntity<String> request = new HttpEntity<>(loginCredentials.toString());
+
+        //Act
+        ResponseEntity<Object> response = testRestTemplate.postForEntity("/users/login", request, null);
+
+        //Assert
+        Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value(), "HTTP Status code should be 200");
+        Assertions.assertNotNull(
+                response.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0),
+                "Response should contain Authorization header with JWT"
+        );
+        Assertions.assertNotNull(
+                response.getHeaders().getValuesAsList("UserID").get(0),
+                "Response should contain UserID in response header"
+        );
     }
 
 }
