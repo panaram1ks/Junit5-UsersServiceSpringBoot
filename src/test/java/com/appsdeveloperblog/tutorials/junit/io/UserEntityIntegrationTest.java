@@ -58,4 +58,20 @@ class UserEntityIntegrationTest {
 
     }
 
+    @Test
+    void testUserEntity_whenUserIdIsNotUniq_shouldThrowException() {
+        // Arrange
+        UserEntity persistedUser = testEntityManager.persistAndFlush(userEntity);
+        String userId = persistedUser.getUserId();
+        UserEntity newUserEntity = new UserEntity();
+        newUserEntity.setUserId(userId);
+
+        // Assert & Act
+        Assertions.assertThrows(
+                PersistenceException.class,
+                () -> testEntityManager.persistAndFlush(newUserEntity),
+                "Пользователь с одинаковым UserId не может быть сохранен"
+        );
+    }
+
 }
