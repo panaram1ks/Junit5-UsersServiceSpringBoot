@@ -28,6 +28,7 @@ import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // что бы после авторизации JWT token сохранился для других методов
 public class UsersControllersIntegrationTest {
 
     @Value("${server.port}")
@@ -44,6 +45,8 @@ public class UsersControllersIntegrationTest {
 
     @Autowired
     private TestRestTemplate testRestTemplate;
+
+    private String authorizationToken;
 
     @Test
     @DisplayName("User can be created")
@@ -119,17 +122,44 @@ public class UsersControllersIntegrationTest {
 
         //Act
         ResponseEntity<Object> response = testRestTemplate.postForEntity("/users/login", request, null);
+        authorizationToken = response.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0);
 
         //Assert
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value(), "HTTP Status code should be 200");
         Assertions.assertNotNull(
-                response.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0),
+                authorizationToken,
                 "Response should contain Authorization header with JWT"
         );
         Assertions.assertNotNull(
                 response.getHeaders().getValuesAsList("UserID").get(0),
                 "Response should contain UserID in response header"
         );
+    }
+
+    @Test
+    @DisplayName("GET /users works")
+    @Order(2)  // must execute after "/login works" get JWT
+    void testGetUsers_whenJWTProvided_returnUsers() {
+        // Arrange
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setBearerAuth(authorizationToken);
+
+        HttpEntity requestEntity = new HttpEntity<>(headers);
+
+        // Act
+        ResponseEntity<List<UserRest>> response = testRestTemplate.exchange("/users",
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<List<UserRest>>() {
+                }
+        );
+
+        // Assert
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(), "Http Status code should be 200");
+        List<UserRest> userRestList = response.getBody();
+        Assertions.assertEquals(userRestList.size(), 1, "There should be exactly 1 user in the list");
+
     }
 
 }
