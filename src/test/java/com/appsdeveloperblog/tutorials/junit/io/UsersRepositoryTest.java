@@ -42,4 +42,16 @@ public class UsersRepositoryTest {
         Assertions.assertEquals(userEntity.getEmail(), storedUser.getEmail(), "Emails are not equal");
     }
 
+    @Test
+    void testFindByUserId_whenGivenCorrectUserId_returnUserEntity(){
+        // Arrange
+
+        // Act
+        testEntityManager.persistAndFlush(userEntity);
+        UserEntity storedUser = usersRepository.findByUserId(userEntity.getUserId());
+        // Assert
+        Assertions.assertNotNull(storedUser, "StoredUser should not be null");
+        Assertions.assertEquals(userEntity.getUserId(), storedUser.getUserId(), "userId should be equal");
+    }
+
 }
