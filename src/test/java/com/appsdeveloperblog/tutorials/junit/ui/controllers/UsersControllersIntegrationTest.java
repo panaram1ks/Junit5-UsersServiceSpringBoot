@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Arrays;
+import java.util.List;
 
 //@SpringBootTest // позволяет использовать все слои spring application
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK) // используется по умолчанию (не поднимает тестовый сервер)
@@ -72,6 +74,31 @@ public class UsersControllersIntegrationTest {
         Assertions.assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         Assertions.assertEquals(userDetailsRequestJson.getString("firstName"), userRest.getFirstName(), "firstName не совпадает!");
 
+    }
+
+    @Test
+    @DisplayName("GET /users requires JWT")
+    void getUsers_whenMissingJWT_returns403(){
+        //Arrange
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+
+        HttpEntity requestEntity = new HttpEntity<>(null, headers);
+
+        //Act
+//        ResponseEntity<UserRest> response = testRestTemplate.getForEntity(
+//                "/users",
+//                UserRest.class);
+
+        ResponseEntity<List<UserRest>> response = testRestTemplate.exchange("/users",
+                HttpMethod.GET,
+                requestEntity,
+                new ParameterizedTypeReference<List<UserRest>>() {
+                }
+        );
+
+        //Assert
+        Assertions.assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value(), "Status code is not 403!");
     }
 
 }
